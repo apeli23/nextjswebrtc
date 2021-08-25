@@ -1,17 +1,8 @@
-import React, { useRef, useEffect } from "react";
-import Head from 'next/head'
-import Image from 'next/image'
-import styles from '../styles/Home.module.css'
-import { getUsers } from "../utils/user";
+import React, { useRef} from "react";
 import { firestore } from "../utils/firebase"
-import firebase from "firebase/app";
 import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
 
 export default function Home() {
-  useEffect(() => {
-    getUsers();
-  }, []);
 
   const webcamButtonRef = useRef();
   const webcamVideoRef = useRef();
@@ -224,18 +215,14 @@ export default function Home() {
   }
 
   const uploadVideo = async (base64) => {
-    console.log(base64)
+    console.log("uploading to backend...")
     try {
       fetch("/api/upload", {
         method: "POST",
         body: JSON.stringify({ data: base64 }),
         headers: { "Content-Type": "application/json" },
-        // }).then((response) => {
-        //   console.log(response.status);
-        //   response.json().then((data) => {
-        //     urls.push(data.data);
-        //     console.log(urls)
-        //   });
+      }).then((response) => {
+        console.log("successfull session", response.status);
       });
     } catch (error) {
       console.error(error);
