@@ -14,3 +14,19 @@ a {
 * {
   box-sizing: border-box;
 }
+#center {
+  text-align: center;
+}
+
+
+.videos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.webcamVideo {
+  width: 40vw;
+  height: 30vw;
+  margin: 2rem;
+  background: #2c3e50;
+}

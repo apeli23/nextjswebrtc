@@ -13,6 +13,7 @@ const useStyles = makeStyles({
   },
   main: {
     minHeight: '80vh',
+    textAlign:'center',
   },
 });
 
