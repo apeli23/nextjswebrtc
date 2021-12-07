@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { firestore } from '../utils/firebase';
+import firebase from "firebase/app";
 import Button from '@material-ui/core/Button';
 import Layout from '../components/Layout';
 
@@ -30,9 +31,9 @@ export default function Home() {
   };
   console.log('servers', servers);
 
-  // Global State
-  // const pc = new RTCPeerConnection(servers); //Returns a newly-created RTCPeerConnection, which represents a connection between the local device and a remote peer
-  // console.log('pc', pc);
+  //Global State
+  const pc = new RTCPeerConnection(servers); //Returns a newly-created RTCPeerConnection, which represents a connection between the local device and a remote peer
+  console.log('pc', pc);
   return (
     <>
       <h1>MAIN</h1>
