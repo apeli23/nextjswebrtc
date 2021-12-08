@@ -115,6 +115,34 @@ export default function Home() {
 
     // hangupButtonRef.current.disabled = false;
   };
+
+  const answerHandler = async () => {
+    console.log('Joining the call ....');
+    const callId = callInputRef.current.value;
+    const callDoc = firestore.collection('calls').doc(callId);
+    const answerCandidates = callDoc.collection('answerCandidates');
+    const offerCandidates = callDoc.collection('offerCandidates');
+
+    pc.onicecandidate = (event) => {
+      event.candidate && answerCandidates.add(event.candidate.toJSON());
+    };
+    console.log('pc', pc);
+
+    const callData = (await callDoc.get()).data();
+
+    const offerDescription = callData.offer;
+    await pc.setRemoteDescription(new RTCSessionDescription(offerDescription));
+
+    const answerDescription = await pc.createAnswer();
+    await pc.setLocalDescription(answerDescription);
+
+    const answer = {
+      type: answerDescription.type,
+      sdp: answerDescription.sdp,
+    };
+
+    await callDoc.update({ answer });
+  };
   return (
     <div>
       <h1 id="subtitle">
@@ -171,14 +199,14 @@ export default function Home() {
       <p>Answer the call from a different browser window or device</p>
 
       <input ref={callInputRef} />
-      {/* <Button
+      <Button
         color="primary"
         variant="contained"
         onClick={answerHandler}
         ref={answerButtonRef}
       >
         Answer
-      </Button> */}
+      </Button>
 
       {/* <h1 id="subtitle">
         <span> Hangup</span>
