@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { firestore } from '../utils/firebase';
 import Button from '@material-ui/core/Button';
 import firebase from 'firebase/app';
+import Layout from '../components/Layout'
 
 export default function Home() {
   const webcamButtonRef = useRef();
@@ -142,23 +143,75 @@ export default function Home() {
     };
 
     await callDoc.update({ answer });
-    
+
     offerCandidates.onSnapshot((snapshot) => {
       snapshot.docChanges().forEach((change) => {
         console.log(change);
-        if (change.type === "added") {
+        if (change.type === 'added') {
           let data = change.doc.data();
           pc.addIceCandidate(new RTCIceCandidate(data));
         }
       });
     });
-
   };
+
+  const hangupHandler = () => {
+    console.log('Hanging up the call ...');
+    localStream.getTracks().forEach((track) => track.stop());
+    remoteStream.getTracks().forEach((track) => track.stop());
+    mediaRecorder.onstop = async (event) => {
+      let blob = new Blob(recordedChunks, {
+        type: 'video/webm',
+      });
+
+      await readFile(blob).then((encoded_file) => {
+        uploadVideo(encoded_file);
+      });
+
+      videoDownloadRef.current.href = URL.createObjectURL(blob);
+      videoDownloadRef.current.download =
+        new Date().getTime() + '-locastream.webm';
+    };
+    console.log(videoDownloadRef);
+  };
+  function readFile(file) {
+    console.log('readFile()=>', file);
+    return new Promise(function (resolve, reject) {
+      let fr = new FileReader();
+
+      fr.onload = function () {
+        resolve(fr.result);
+      };
+
+      fr.onerror = function () {
+        reject(fr);
+      };
+
+      fr.readAsDataURL(file);
+    });
+  }
+
+  const uploadVideo = async (base64) => {
+    console.log('uploading to backend...');
+    try {
+      fetch('/api/upload', {
+        method: 'POST',
+        body: JSON.stringify({ data: base64 }),
+        headers: { 'Content-Type': 'application/json' },
+      }).then((response) => {
+        console.log('successfull session', response.status);
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
-    <div>
+    <Layout>
       <h1 id="subtitle">
         <span> Start Webcam</span>
       </h1>
+      <h1>Headsets recommended</h1>
       <div className="videos">
         <span>
           <h1 id="subtitle">
@@ -219,7 +272,7 @@ export default function Home() {
         Answer
       </Button>
 
-      {/* <h1 id="subtitle">
+      <h1 id="subtitle">
         <span> Hangup</span>
       </h1>
 
@@ -230,10 +283,10 @@ export default function Home() {
         ref={hangupButtonRef}
       >
         Hangup
-      </Button> */}
-      {/* <a ref={videoDownloadRef} href={videoUrl}>
+      </Button>
+      <a ref={videoDownloadRef} href={videoUrl}>
         Download session video
-      </a> */}
-    </div>
+      </a>
+    </Layout>
   );
 }
