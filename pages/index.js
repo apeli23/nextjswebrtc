@@ -211,7 +211,6 @@ export default function Home() {
       <h1 id="subtitle">
         <span> Start Webcam</span>
       </h1>
-      <h1>Headsets recommended</h1>
       <div className="videos">
         <span>
           <h1 id="subtitle">
