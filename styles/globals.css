@@ -1,33 +1,22 @@
-div{
-  /*  leverage cascade for cross-browser gradients  */
-  background: radial-gradient(
-    hsl(100 100% 60%), 
-    hsl(200 100% 60%) 
-  ) fixed;
-  background: conic-gradient(
-    hsl(100 100% 60%), 
-    hsl(200 100% 60%), 
-    hsl(100 100% 60%) 
-  ) fixed;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: #00000082;
-  text-align: center;
-} 
+ 
 
 body {
-  background: hsl(204 100% 5%);
-/*   background: conic-gradient(
-    hsl(100 100% 60%), 
-    hsl(200 100% 60%),
-    hsl(100 100% 60%)
-  ) fixed; */
-  color: rgb(0, 0, 0);
-  padding: 5vmin;
-  box-sizing: border-box;
+  background-image:url('https://res.cloudinary.com/dogjmmett/image/upload/v1661849341/template2_ynlxet.png');
+  /* padding: 5vmin; */
+  /* box-sizing: border-box; */
   display: grid;
   place-content: center;
-  font-family: system-ui;
+  font-family: 'Josefin Sans', sans-serif;
   font-size: min(200%, 5vmin);
+}
+
+nav {
+  background-color:darkslateblue;
+  height: 80px;
+  font-size: 300px;
+  font-weight: 300px;
+  color: white;
+  /* bottom: 3%; */
 }
 
 h1 {
@@ -51,8 +40,8 @@ html {
   text-align: center;
 }
 .webcamVideo {
-  width: 40vw;
-  height: 30vw;
+  width: 30vw;
+  height: 20vw;
   margin: 2rem;
   background: #2c3e50;
 }
@@ -61,4 +50,9 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+video:hover{
+  background: '#FFF';
+  cursor: pointer;
 }
