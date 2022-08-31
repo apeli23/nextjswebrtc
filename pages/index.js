@@ -270,24 +270,24 @@ export default function Home() {
             marginBottom: '2%',
           }}
         >
-          <Button
+          <button
             variant="contained"
             color="primary"
             onClick={webCamHandler}
             ref={webcamButtonRef}
           >
             Start Webcam
-          </Button>
+          </button>
 
           <div>
-            <Button
+            <button
               variant="contained"
               color="primary"
               onClick={callHandler}
               ref={callButtonRef}
             >
               Create Call(Offer)
-            </Button>
+            </button>
             {answeredCode && <p style={{marginTop: '3%'}}>call code offered! check the tag below</p>}
           </div>
         </div>
@@ -323,23 +323,23 @@ export default function Home() {
             marginBottom: '3%',
           }}
         >
-          <Button
+          <button
             color="primary"
             variant="contained"
             onClick={answerHandler}
             ref={answerButtonRef}
           >
             Answer
-          </Button>
+          </button>
 
-          <Button
+          <button
             color="primary"
             variant="contained"
             onClick={hangupHandler}
             ref={hangupButtonRef}
           >
             Hangup
-          </Button>
+          </button>
         </div>
 
         <a
