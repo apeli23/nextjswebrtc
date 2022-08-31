@@ -14,6 +14,7 @@ export default function Home() {
   const answerCallRef = useRef();
 
   const [answeredCode, setAnswerCode] = useState(false);
+  const [hangupActive, setHangupActive] = useState(false);
 
   let videoUrl = null;
 
@@ -199,6 +200,7 @@ export default function Home() {
       videoDownloadRef.current.download =
         new Date().getTime() + '-locastream.webm';
     };
+    setHangupActive(true);
     console.log(videoDownloadRef);
   };
 
@@ -288,7 +290,11 @@ export default function Home() {
             >
               Create Call(Offer)
             </button>
-            {answeredCode && <p style={{marginTop: '3%'}}>call code offered! check the tag below</p>}
+            {answeredCode && (
+              <p style={{ marginTop: '3%' }}>
+                call code offered! check the tag below
+              </p>
+            )}
           </div>
         </div>
         <div
@@ -342,13 +348,15 @@ export default function Home() {
           </button>
         </div>
 
-        <a
-          style={{ marginBottom: '34%' }}
-          ref={videoDownloadRef}
-          href={videoUrl}
-        >
-          Download session video
-        </a>
+        {hangupActive && (
+          <a
+            style={{ marginBottom: '34%' }}
+            ref={videoDownloadRef}
+            href={videoUrl}
+          >
+            Download session video
+          </a>
+        )}
       </div>
     </div>
   );
