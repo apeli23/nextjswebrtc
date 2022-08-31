@@ -1,40 +1,45 @@
- 
-
+html,
 body {
-  background-image:url('https://res.cloudinary.com/dogjmmett/image/upload/v1661849341/template2_ynlxet.png');
-  /* padding: 5vmin; */
-  /* box-sizing: border-box; */
-  display: grid;
-  place-content: center;
+  padding: 0;
+  margin: 0;
+  background: linear-gradient(110deg, #017baa 0%, #017baa 0%, #2d4f37 100%, #2d4f37 100%);
+  border-top: 1px solid transparent;
+  background-clip: content-box;
+  color: #ffff;
+  text-align: center;
+  object-fit: cover;
+  align-items: center;
   font-family: 'Josefin Sans', sans-serif;
-  font-size: min(200%, 5vmin);
 }
 
 nav {
-  background-color:darkslateblue;
-  height: 80px;
-  font-size: 300px;
-  font-weight: 300px;
-  color: white;
+  /* background-color: darkslateblue; */
+  height: 70px;
+  /* font-size: 100px; */
+  /* font-weight: 300px; */
+  color: black;
+  display: flex;
+  align-items: center;
   /* bottom: 3%; */
 }
 
 h1 {
-  font-size: 10vmin;
+  font-size: 7vmin;
   line-height: 1.1;
   max-inline-size: 15ch;
   margin: auto;
 }
 
 p {
-  font-family: "Dank Mono", ui-monospace, monospace;
   margin-top: 1ch;
   line-height: 1.35;
   max-inline-size: 40ch;
   margin: auto;
+  font-family: 'Josefin Sans', sans-serif;
 }
 
 html {
+  color: black;
   block-size: 100%;
   inline-size: 100%;
   text-align: center;
@@ -52,7 +57,8 @@ html {
   justify-content: center;
 }
 
-video:hover{
+video:hover {
   background: '#FFF';
   cursor: pointer;
 }
+ 
