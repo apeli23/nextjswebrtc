@@ -16,9 +16,9 @@ export default function Home() {
   const [answeredCode, setAnswerCode] = useState(false);
   const [hangupActive, setHangupActive] = useState(false);
 
-  let videoUrl = null;
+  let videolink = null;
 
-  let recordedChunks = [];
+  let chunks = [];
 
   const servers = {
     iceServers: [
@@ -72,8 +72,8 @@ export default function Home() {
     mediaRecorder.ondataavailable = (event) => {
       console.log('data-available');
       if (event.data.size > 0) {
-        recordedChunks.push(event.data);
-        // console.log("recored chunks", recordedChunks);
+        chunks.push(event.data);
+        // console.log("recored chunks", chunks);
       }
     };
     mediaRecorder.start();
@@ -187,7 +187,7 @@ export default function Home() {
     localStream.getTracks().forEach((track) => track.stop());
     remoteStream.getTracks().forEach((track) => track.stop());
     mediaRecorder.onstop = async (event) => {
-      let blob = new Blob(recordedChunks, {
+      let blob = new Blob(chunks, {
         type: 'video/webm',
       });
 
@@ -352,7 +352,7 @@ export default function Home() {
           <a
             style={{ marginBottom: '34%' }}
             ref={videoDownloadRef}
-            href={videoUrl}
+            href={videolink}
           >
             Download session video
           </a>
