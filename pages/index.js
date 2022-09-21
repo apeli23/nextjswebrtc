@@ -1,8 +1,10 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { firestore } from '../utils/firebase';
 import firebase from 'firebase/app';
 
 export default function Home() {
+  const [link, setLink] = useState();
+
   const webcamButtonRef = useRef();
   const webcamVideoRef = useRef();
   const callButtonRef = useRef();
@@ -162,9 +164,8 @@ export default function Home() {
         type: 'video/webm',
       });
 
-      await readFile(blob).then((encoded_file) => {
-        uploadVideo(encoded_file);
-      });
+       
+        uploadVideo(blob);
 
       videoDownloadRef.current.href = URL.createObjectURL(blob);
       videoDownloadRef.current.download =
@@ -189,19 +190,24 @@ export default function Home() {
     });
   }
 
-  const uploadVideo = async (base64) => {
-    console.log('uploading to backend...');
-    try {
-      fetch('/api/upload', {
-        method: 'POST',
-        body: JSON.stringify({ data: base64 }),
-        headers: { 'Content-Type': 'application/json' },
-      }).then((response) => {
-        console.log('successfull session', response.status);
-      });
-    } catch (error) {
-      console.error(error);
-    }
+  const uploadVideo = async (blob) => {
+    console.log("uploading" + blob + " to backend...");
+    await readFile(blob).then((encoded_file) => {
+      try {
+        fetch('/api/upload', {
+          method: 'POST',
+          body: JSON.stringify({ data: encoded_file }),
+          headers: { 'Content-Type': 'application/json' },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            setLink(data.data);
+            console.log(data.data);
+          });
+      } catch (error) {
+        console.error(error);
+      }
+    });
   };
 
   return (
@@ -224,7 +230,8 @@ export default function Home() {
         <span>
           <h1 id="subtitle">
             <span> Remote Stream</span>
-          </h1>
+          </h1><br />
+          {link && <a href={link}><p>online backup link</p></a>}
           <video
             className="webcamVideo"
             ref={remoteVideoRef}
