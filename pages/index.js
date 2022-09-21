@@ -1,6 +1,6 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { firestore } from '../utils/firebase';
-import Button from '@material-ui/core/Button';
+import firebase from 'firebase/app';
 
 export default function Home() {
   const webcamButtonRef = useRef();
@@ -11,14 +11,10 @@ export default function Home() {
   const remoteVideoRef = useRef();
   const hangupButtonRef = useRef();
   const videoDownloadRef = useRef();
-  const answerCallRef = useRef();
 
-  const [answeredCode, setAnswerCode] = useState(false);
-  const [hangupActive, setHangupActive] = useState(false);
+  let videoUrl = null;
 
-  let videolink = null;
-
-  let chunks = [];
+  let recordedChunks = [];
 
   const servers = {
     iceServers: [
@@ -32,18 +28,13 @@ export default function Home() {
     iceCandidatePoolSize: 10,
   };
   console.log('servers', servers);
-
-  // Global State
-  const pc = new RTCPeerConnection(servers); //Returns a newly-created RTCPeerConnection, which represents a connection between the local device and a remote peer
-  console.log('pc', pc);
-
+  const pc = new RTCPeerConnection(servers);
   let localStream = null;
   let remoteStream = null;
-  var options = { mimeType: 'video/webm; codecs=vp9' }; //Multipurpose Internet Mail Extensions  is a standard that indicates the nature and format of a document, file, or assortment of bytes.
+  var options = { mimeType: 'video/webm; codecs=vp9' };
   let mediaRecorder = null;
 
   const webCamHandler = async () => {
-    console.log('Starting webcam and mic ..... ');
     localStream = await navigator.mediaDevices.getUserMedia({
       video: true,
       audio: true,
@@ -62,8 +53,6 @@ export default function Home() {
         remoteStream.addTrack(track);
       });
     };
-
-    //populate video element
     webcamVideoRef.current.srcObject = localStream;
     remoteVideoRef.current.srcObject = remoteStream;
 
@@ -72,27 +61,23 @@ export default function Home() {
     mediaRecorder.ondataavailable = (event) => {
       console.log('data-available');
       if (event.data.size > 0) {
-        chunks.push(event.data);
-        // console.log("recored chunks", chunks);
+        recordedChunks.push(event.data);
+        console.log(recordedChunks);
       }
     };
     mediaRecorder.start();
   };
 
   const callHandler = async () => {
-    console.log('Starting call id generation .... ');
+    console.log('Starting callid generation .... ');
     // Reference Firestore collections for signaling
     const callDoc = firestore.collection('calls').doc();
     const offerCandidates = callDoc.collection('offerCandidates');
     const answerCandidates = callDoc.collection('answerCandidates');
 
     callInputRef.current.value = callDoc.id;
-    setAnswerCode(true);
-    // RTCIceCandidate interface—part of the  WebRTC API—represents a candidate Internet Connectivity Establishment (ICE) configuration which may be used to establish an RTCPeerConnection
-    // icecandidate event is sent to an RTCPeerConnection when an RTCIceCandidate has been identified and added to the local peer by a call to RTCPeerConnection.
 
     // Get candidates for caller, save to db
-
     pc.onicecandidate = (event) => {
       event.candidate && offerCandidates.add(event.candidate.toJSON());
     };
@@ -117,17 +102,7 @@ export default function Home() {
       }
     });
 
-    await callDoc.set({ offer });
-
-    // Listen for remote answer
-    callDoc.onSnapshot((snapshot) => {
-      const data = snapshot.data();
-      if (!pc.currentRemoteDescription && data?.answer) {
-        const answerDescription = new RTCSessionDescription(data.answer);
-        pc.setRemoteDescription(answerDescription);
-      }
-    });
-    //      When answered, add candidate to peer connection
+    // When answered, add candidate to peer connection
     answerCandidates.onSnapshot((snapshot) => {
       snapshot.docChanges().forEach((change) => {
         if (change.type === 'added') {
@@ -136,58 +111,54 @@ export default function Home() {
         }
       });
     });
+
     // hangupButtonRef.current.disabled = false;
   };
 
   const answerHandler = async () => {
     console.log('Joining the call ....');
-    if (!answerCallRef.current.value) {
-      console.log(answerCallRef.current.value);
-    } else if (answerCallRef.current.value) {
-      const callId = answerCallRef.current.value;
-      const callDoc = firestore.collection('calls').doc(callId);
-      const answerCandidates = callDoc.collection('answerCandidates');
-      const offerCandidates = callDoc.collection('offerCandidates');
+    const callId = callInputRef.current.value;
+    const callDoc = firestore.collection('calls').doc(callId);
+    const answerCandidates = callDoc.collection('answerCandidates');
+    const offerCandidates = callDoc.collection('offerCandidates');
 
-      pc.onicecandidate = (event) => {
-        event.candidate && answerCandidates.add(event.candidate.toJSON());
-      };
+    pc.onicecandidate = (event) => {
+      event.candidate && answerCandidates.add(event.candidate.toJSON());
+    };
+    console.log('pc', pc);
 
-      const callData = (await callDoc.get()).data();
+    const callData = (await callDoc.get()).data();
 
-      const offerDescription = callData.offer;
-      await pc.setRemoteDescription(
-        new RTCSessionDescription(offerDescription)
-      );
+    const offerDescription = callData.offer;
+    await pc.setRemoteDescription(new RTCSessionDescription(offerDescription));
 
-      const answerDescription = await pc.createAnswer();
-      await pc.setLocalDescription(answerDescription);
+    const answerDescription = await pc.createAnswer();
+    await pc.setLocalDescription(answerDescription);
 
-      const answer = {
-        type: answerDescription.type,
-        sdp: answerDescription.sdp,
-      };
-      await callDoc.update({ answer });
+    const answer = {
+      type: answerDescription.type,
+      sdp: answerDescription.sdp,
+    };
 
-      offerCandidates.onSnapshot((snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-          console.log(change);
-          if (change.type === 'added') {
-            let data = change.doc.data();
-            pc.addIceCandidate(new RTCIceCandidate(data));
-          }
-        });
+    await callDoc.update({ answer });
+
+    offerCandidates.onSnapshot((snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        console.log(change);
+        if (change.type === 'added') {
+          let data = change.doc.data();
+          pc.addIceCandidate(new RTCIceCandidate(data));
+        }
       });
-    }
+    });
   };
 
   const hangupHandler = () => {
     console.log('Hanging up the call ...');
-
     localStream.getTracks().forEach((track) => track.stop());
     remoteStream.getTracks().forEach((track) => track.stop());
     mediaRecorder.onstop = async (event) => {
-      let blob = new Blob(chunks, {
+      let blob = new Blob(recordedChunks, {
         type: 'video/webm',
       });
 
@@ -195,15 +166,12 @@ export default function Home() {
         uploadVideo(encoded_file);
       });
 
-      //FIXME: Send data to cloudinary
       videoDownloadRef.current.href = URL.createObjectURL(blob);
       videoDownloadRef.current.download =
         new Date().getTime() + '-locastream.webm';
     };
-    setHangupActive(true);
     console.log(videoDownloadRef);
   };
-
   function readFile(file) {
     console.log('readFile()=>', file);
     return new Promise(function (resolve, reject) {
@@ -235,129 +203,87 @@ export default function Home() {
       console.error(error);
     }
   };
+
   return (
-    <div>
-      <nav>
-        <h1>Webrtc App</h1>
-      </nav>
-      <br />
-      <div style={{ height: '100vh' }}>
-        <div className="videos">
-          <span className="localstream">
-            <p>Local Stream</p>
-            <video
-              className="webcamVideo"
-              ref={webcamVideoRef}
-              autoPlay
-              playsInline
-            />
-          </span>
-          <span>
-            <p>Remote Stream</p>
-            <video
-              className="webcamVideo"
-              ref={remoteVideoRef}
-              autoPlay
-              playsInline
-            ></video>
-          </span>
-        </div>
-        <div
-          style={{
-            width: '50vw',
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'space-between',
-            marginLeft: '25%',
-            marginBottom: '2%',
-          }}
-        >
-          <button
-            variant="contained"
-            color="primary"
-            onClick={webCamHandler}
-            ref={webcamButtonRef}
-          >
-            Start Webcam
-          </button>
-
-          <div>
-            <button
-              variant="contained"
-              color="primary"
-              onClick={callHandler}
-              ref={callButtonRef}
-            >
-              Create Call(Offer)
-            </button>
-            {answeredCode && (
-              <p style={{ marginTop: '3%' }}>
-                call code offered! check the tag below
-              </p>
-            )}
-          </div>
-        </div>
-        <div
-          style={{
-            width: '700px',
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'space-between',
-            marginLeft: '25%',
-            marginBottom: '3%',
-          }}
-        >
-          <p>
-            To join a call, Paste the offered call code from a different browser
-            window or device inside the tag --{'>'}
-            <br /> and press `answer`{' '}
-          </p>
-          <input
-            placeholder="call codes used here..."
-            className="callcode"
-            style={{ marginTop: '10px', height: '30px' }}
-            ref={callInputRef}
-          />
-        </div>
-        <div
-          style={{
-            width: '40vw',
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'space-between',
-            marginLeft: '30%',
-            marginBottom: '3%',
-          }}
-        >
-          <button
-            color="primary"
-            variant="contained"
-            onClick={answerHandler}
-            ref={answerButtonRef}
-          >
-            Answer
-          </button>
-
-          <button
-            color="primary"
-            variant="contained"
-            onClick={hangupHandler}
-            ref={hangupButtonRef}
-          >
-            Hangup
-          </button>
-        </div>
-
-        {hangupActive && (
-          <a
-            style={{ marginBottom: '34%' }}
-            ref={videoDownloadRef}
-            href={videolink}
-          >
-            Download session video
-          </a>
-        )}
+    <>
+      <h1 id="subtitle">
+        <span> Start Webcam</span>
+      </h1>
+      <div className="videos">
+        <span>
+          <h1 id="subtitle">
+            <span> Local Stream</span>
+          </h1>
+          <video
+            className="webcamVideo"
+            ref={webcamVideoRef}
+            autoPlay
+            playsInline
+          ></video>
+        </span>
+        <span>
+          <h1 id="subtitle">
+            <span> Remote Stream</span>
+          </h1>
+          <video
+            className="webcamVideo"
+            ref={remoteVideoRef}
+            autoPlay
+            playsInline
+          ></video>
+        </span>
       </div>
-    </div>
+
+      <button
+        color="primary"
+        variant="contained"
+        onClick={webCamHandler}
+        ref={webcamButtonRef}
+      >
+        Start webcam
+      </button>
+      <h1 id="subtitle">
+        <span> Create a new Call</span>
+      </h1>
+      <button
+        color="primary"
+        variant="contained"
+        onClick={callHandler}
+        ref={callButtonRef}
+      >
+        Create Call (offer)
+      </button>
+
+      <h1 id="subtitle">
+        <span> Join a call</span>
+      </h1>
+      <p>Answer the call from a different browser window or device</p>
+
+      <input ref={callInputRef} />
+      <button
+        color="primary"
+        variant="contained"
+        onClick={answerHandler}
+        ref={answerButtonRef}
+      >
+        Answer
+      </button>
+
+      <h1 id="subtitle">
+        <span> Hangup</span>
+      </h1>
+
+      <button
+        color="primary"
+        variant="contained"
+        onClick={hangupHandler}
+        ref={hangupButtonRef}
+      >
+        Hangup
+      </button>
+      <a ref={videoDownloadRef} href={videoUrl}>
+        Download session video
+      </a>
+    </>
   );
 }
